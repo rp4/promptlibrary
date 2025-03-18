@@ -31,6 +31,7 @@ export default function PromptsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const subgroupId = searchParams.get('subgroup');
+  const promptId = searchParams.get('id');
   
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -48,10 +49,18 @@ export default function PromptsPage() {
   useEffect(() => {
     if (user) {
       fetchUserLikes().then(() => {
-        fetchPrompts();
+        fetchPrompts().then((prompts) => {
+          if (promptId) {
+            const shared = prompts.find(p => p.id === promptId);
+            if (shared) {
+              setSelectedPrompt(shared);
+              setIsCreating(false);
+            }
+          }
+        });
       });
     }
-  }, [user]);
+  }, [user, promptId]);
 
   useEffect(() => {
     if (user) {

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { getCurrentUser } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
+import { ShareIcon } from '@heroicons/react/24/outline';
 
 interface Prompt {
   id: string;
@@ -27,6 +28,7 @@ export default function PromptDetails({ prompt, onUsePrompt }: PromptDetailsProp
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showCopied, setShowCopied] = useState(false);
   const [title, setTitle] = useState(prompt.title);
   const [promptText, setPromptText] = useState(prompt.prompt_text);
   const [notes, setNotes] = useState(prompt.notes || '');
@@ -104,6 +106,17 @@ export default function PromptDetails({ prompt, onUsePrompt }: PromptDetailsProp
     }
   };
 
+  const handleShare = async () => {
+    const url = `${window.location.origin}/prompts?id=${prompt.id}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setShowCopied(true);
+      setTimeout(() => setShowCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy URL:', err);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fadeIn">
       {error && (
@@ -158,11 +171,27 @@ export default function PromptDetails({ prompt, onUsePrompt }: PromptDetailsProp
           </div>
         ) : (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-900">{prompt.title}</h2>
-              <p className="mt-1 text-sm text-gray-500">
-                Created on {new Date(prompt.created_at).toLocaleDateString()}
-              </p>
+            <div className="flex justify-between items-start">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900">{prompt.title}</h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  Created on {new Date(prompt.created_at).toLocaleDateString()}
+                </p>
+              </div>
+              <div className="relative">
+                <button
+                  onClick={handleShare}
+                  className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-full hover:bg-gray-100"
+                  title="Share prompt"
+                >
+                  <ShareIcon className="h-5 w-5" />
+                </button>
+                {showCopied && (
+                  <div className="absolute right-0 top-full mt-2 bg-gray-800 text-white text-sm py-1 px-2 rounded shadow-lg animate-fadeIn">
+                    Link copied!
+                  </div>
+                )}
+              </div>
             </div>
 
             <div>
