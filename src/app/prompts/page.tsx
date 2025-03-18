@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
@@ -27,7 +27,7 @@ interface Like {
   user_id: string;
 }
 
-export default function PromptsPage() {
+function PromptsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const subgroupId = searchParams.get('subgroup');
@@ -343,5 +343,17 @@ export default function PromptsPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function PromptsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl">Loading...</div>
+      </div>
+    }>
+      <PromptsPageContent />
+    </Suspense>
   );
 } 

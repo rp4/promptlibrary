@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { extractVariables, replaceVariables } from '@/lib/promptUtils';
@@ -16,7 +16,7 @@ interface Prompt {
   favorites_count: number;
 }
 
-export default function RunPromptPage() {
+function RunPromptPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const promptId = searchParams.get('id');
@@ -306,5 +306,17 @@ export default function RunPromptPage() {
         </div>
       )}
     </main>
+  );
+}
+
+export default function RunPromptPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl">Loading...</div>
+      </div>
+    }>
+      <RunPromptPageContent />
+    </Suspense>
   );
 } 
