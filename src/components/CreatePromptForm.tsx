@@ -23,8 +23,6 @@ export default function CreatePromptForm({ onCancel, onSubmit, subgroupId }: Cre
     setError(null);
 
     try {
-      console.log('Creating prompt with subgroupId:', subgroupId);
-      
       if (!subgroupId) {
         throw new Error('No subgroup selected');
       }
@@ -34,7 +32,6 @@ export default function CreatePromptForm({ onCancel, onSubmit, subgroupId }: Cre
         throw new Error('User not authenticated');
       }
 
-      console.log('Fetching subgroup data...');
       const { data: subgroupData, error: subgroupError } = await supabase
         .from('subgroups')
         .select('group_id')
@@ -42,7 +39,6 @@ export default function CreatePromptForm({ onCancel, onSubmit, subgroupId }: Cre
         .single();
 
       if (subgroupError) {
-        console.error('Subgroup fetch error:', subgroupError);
         throw new Error('Failed to fetch subgroup data');
       }
 
@@ -50,8 +46,7 @@ export default function CreatePromptForm({ onCancel, onSubmit, subgroupId }: Cre
         throw new Error('Subgroup not found');
       }
 
-      console.log('Creating prompt...');
-      const { data: promptData, error: promptError } = await supabase
+      const { error: promptError } = await supabase
         .from('prompts')
         .insert([
           {
@@ -68,25 +63,21 @@ export default function CreatePromptForm({ onCancel, onSubmit, subgroupId }: Cre
         .single();
 
       if (promptError) {
-        console.error('Prompt creation error:', promptError);
         throw new Error(promptError.message);
       }
 
-      console.log('Prompt created successfully:', promptData);
       await onSubmit();
     } catch (err: any) {
-      console.error('Error in handleSubmit:', err);
       setError(err.message || 'An error occurred while creating the prompt');
-      throw err; // Propagate error to parent component
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-6 animate-fadeIn">
       {error && (
-        <div className="rounded-md bg-red-50 p-4">
+        <div className="rounded-md bg-red-50 p-4 animate-fadeIn">
           <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
@@ -100,7 +91,7 @@ export default function CreatePromptForm({ onCancel, onSubmit, subgroupId }: Cre
           id="title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className="input"
           required
         />
       </div>
@@ -114,8 +105,9 @@ export default function CreatePromptForm({ onCancel, onSubmit, subgroupId }: Cre
           rows={6}
           value={promptText}
           onChange={(e) => setPromptText(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className="input"
           required
+          placeholder="Enter your prompt text here. Use [[variable]] syntax for variables that will be replaced when running the prompt."
         />
       </div>
 
@@ -128,22 +120,23 @@ export default function CreatePromptForm({ onCancel, onSubmit, subgroupId }: Cre
           rows={3}
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className="input"
+          placeholder="Add any additional notes or instructions for using this prompt."
         />
       </div>
 
-      <div className="flex justify-end space-x-3">
+      <div className="flex justify-end space-x-4">
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          className="btn-secondary"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isSubmitting}
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-500 border border-transparent rounded-md shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+          className="btn-primary"
         >
           {isSubmitting ? 'Creating...' : 'Create Prompt'}
         </button>

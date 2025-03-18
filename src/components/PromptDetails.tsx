@@ -37,7 +37,6 @@ export default function PromptDetails({ prompt, onUsePrompt }: PromptDetailsProp
   }, [prompt]);
 
   React.useEffect(() => {
-    // Update form values when prompt changes
     setTitle(prompt.title);
     setPromptText(prompt.prompt_text);
     setNotes(prompt.notes || '');
@@ -68,8 +67,6 @@ export default function PromptDetails({ prompt, onUsePrompt }: PromptDetailsProp
         .eq('created_by', (await getCurrentUser())?.id);
 
       if (error) throw error;
-
-      // Redirect to prompts page after successful deletion
       router.refresh();
     } catch (err: any) {
       setError(err.message || 'Failed to delete prompt');
@@ -108,14 +105,14 @@ export default function PromptDetails({ prompt, onUsePrompt }: PromptDetailsProp
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fadeIn">
       {error && (
-        <div className="rounded-md bg-red-50 p-4">
+        <div className="rounded-md bg-red-50 p-4 animate-fadeIn">
           <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
 
-      <div>
+      <div className="card p-6">
         {isEditing ? (
           <div className="space-y-4">
             <div>
@@ -127,7 +124,7 @@ export default function PromptDetails({ prompt, onUsePrompt }: PromptDetailsProp
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                className="input"
                 required
               />
             </div>
@@ -141,7 +138,7 @@ export default function PromptDetails({ prompt, onUsePrompt }: PromptDetailsProp
                 rows={6}
                 value={promptText}
                 onChange={(e) => setPromptText(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                className="input"
                 required
               />
             </div>
@@ -155,20 +152,22 @@ export default function PromptDetails({ prompt, onUsePrompt }: PromptDetailsProp
                 rows={3}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                className="input"
               />
             </div>
           </div>
         ) : (
-          <>
-            <h2 className="text-2xl font-bold text-gray-900">{prompt.title}</h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Created on {new Date(prompt.created_at).toLocaleDateString()}
-            </p>
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">{prompt.title}</h2>
+              <p className="mt-1 text-sm text-gray-500">
+                Created on {new Date(prompt.created_at).toLocaleDateString()}
+              </p>
+            </div>
 
-            <div className="mt-6">
+            <div>
               <h3 className="text-lg font-medium text-gray-900">Prompt</h3>
-              <div className="mt-2 p-4 bg-gray-50 rounded-md">
+              <div className="mt-2 p-4 bg-gray-50 rounded-md border border-gray-100">
                 <pre className="whitespace-pre-wrap text-sm text-gray-700">
                   {prompt.prompt_text}
                 </pre>
@@ -176,63 +175,46 @@ export default function PromptDetails({ prompt, onUsePrompt }: PromptDetailsProp
             </div>
 
             {prompt.notes && (
-              <div className="mt-6">
+              <div>
                 <h3 className="text-lg font-medium text-gray-900">Notes</h3>
-                <div className="mt-2 text-sm text-gray-700">
+                <div className="mt-2 text-sm text-gray-700 p-4 bg-gray-50 rounded-md border border-gray-100">
                   <p>{prompt.notes}</p>
                 </div>
               </div>
             )}
-          </>
-        )}
-      </div>
-
-      <div className="flex justify-between items-center">
-        {isCreator && (
-          <div className="space-x-4">
-            {isEditing ? (
-              <>
-                <button
-                  onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={isSaving}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-500 border border-transparent rounded-md shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  {isSaving ? 'Saving...' : 'Save Changes'}
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
-                >
-                  {isDeleting ? 'Deleting...' : 'Delete'}
-                </button>
-              </>
-            )}
           </div>
         )}
-        {!isEditing && (
-          <button
-            onClick={() => onUsePrompt(prompt.id)}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-500 border border-transparent rounded-md shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            Use Prompt
-          </button>
-        )}
+
+        <div className="mt-6 flex justify-between items-center">
+          {isCreator && (
+            <div className="space-x-4">
+              {isEditing ? (
+                <>
+                  <button onClick={() => setIsEditing(false)} className="btn-secondary">
+                    Cancel
+                  </button>
+                  <button onClick={handleSave} disabled={isSaving} className="btn-primary">
+                    {isSaving ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button onClick={() => setIsEditing(true)} className="btn-secondary">
+                    Edit
+                  </button>
+                  <button onClick={handleDelete} disabled={isDeleting} className="btn-danger">
+                    {isDeleting ? 'Deleting...' : 'Delete'}
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+          {!isEditing && (
+            <button onClick={() => onUsePrompt(prompt.id)} className="btn-primary">
+              Use Prompt
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

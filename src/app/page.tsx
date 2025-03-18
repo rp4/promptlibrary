@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import Link from 'next/link';
 import { getCurrentUser } from '@/lib/auth';
 import AuthForm from '@/components/AuthForm';
 
@@ -70,6 +71,11 @@ export default function Home() {
     router.push(`/prompts?subgroup=${subgroupId}`);
   };
 
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -91,61 +97,58 @@ export default function Home() {
   );
 
   return (
-    <main className="min-h-screen bg-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 lg:px-8 py-6 border-b border-gray-200">
-            <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-semibold text-gray-900">
-                Gamified Prompt Library
-              </h1>
+    <main className="min-h-screen">
+      <header className="header">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <div className="flex-1" />
+            <Link href="/" className="text-white flex-1 text-center">
+              <h1 className="text-2xl font-semibold">Gamified Prompt Library</h1>
+            </Link>
+            <div className="flex-1 flex justify-end">
               <button
-                onClick={() => {
-                  supabase.auth.signOut();
-                  setUser(null);
-                }}
-                className="text-sm text-gray-600 hover:text-gray-900"
+                onClick={handleSignOut}
+                className="text-white/80 hover:text-white transition-colors"
               >
-                Sign out
+                Sign Out
               </button>
             </div>
           </div>
+        </div>
+      </header>
 
-          <div>
-            <nav className="flex space-x-4 px-4 sm:px-6 lg:px-8 py-4" aria-label="Tabs">
-              {groups.map((group) => (
-                <button
-                  key={group.id}
-                  onClick={() => setActiveGroup(group.id)}
-                  className={`px-3 py-2 text-sm font-medium rounded-md
-                    ${activeGroup === group.id
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                >
-                  {group.name}
-                </button>
-              ))}
-            </nav>
-          </div>
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {/* Main Navigation Tabs */}
+        <div className="flex space-x-1 mb-8 bg-gray-100 p-1 rounded-lg">
+          {groups.map((group) => (
+            <button
+              key={group.id}
+              onClick={() => setActiveGroup(group.id)}
+              className={`
+                flex-1 py-3 px-6 rounded-lg font-medium transition-all
+                ${
+                  activeGroup === group.id
+                    ? 'bg-blue-600 text-white shadow-lg'
+                    : 'text-gray-600 hover:bg-gray-200'
+                }
+              `}
+            >
+              {group.name}
+            </button>
+          ))}
+        </div>
 
-          <div className="p-4 sm:p-6 lg:p-8">
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredSubgroups.map((subgroup) => (
-                <div
-                  key={subgroup.id}
-                  onClick={() => handleSubgroupClick(subgroup.id)}
-                  className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm hover:border-gray-400 hover:ring-1 hover:ring-gray-400 cursor-pointer"
-                >
-                  <div className="min-h-[100px] flex items-center justify-center">
-                    <h3 className="text-lg font-medium text-gray-900 text-center">
-                      {subgroup.name}
-                    </h3>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+        {/* Subgroups Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {filteredSubgroups.map((subgroup) => (
+            <button
+              key={subgroup.id}
+              onClick={() => handleSubgroupClick(subgroup.id)}
+              className="bg-white rounded-lg shadow-sm p-6 text-left hover:shadow-md transition-shadow border border-gray-100"
+            >
+              <h3 className="text-lg font-medium text-gray-900">{subgroup.name}</h3>
+            </button>
+          ))}
         </div>
       </div>
     </main>

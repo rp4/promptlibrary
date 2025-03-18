@@ -180,58 +180,60 @@ export default function PromptsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-100">
+    <main className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-navy-900 text-white p-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Link href="/" className="text-white hover:text-gray-200">
+      <header className="header">
+        <div className="max-w-7xl mx-auto flex items-center justify-between p-4">
+          <div className="flex-1">
+            <Link href="/" className="text-white/80 hover:text-white transition-colors">
               <ArrowLeftIcon className="h-6 w-6" />
             </Link>
-            <h1 className="text-2xl font-semibold">Prompts</h1>
           </div>
-          <Link href="/" className="text-white hover:text-gray-200">
-            <HomeIcon className="h-6 w-6" />
-          </Link>
+          <h1 className="text-2xl font-semibold flex-1 text-center">Prompts</h1>
+          <div className="flex-1 flex justify-end">
+            <Link href="/" className="text-white/80 hover:text-white transition-colors">
+              <HomeIcon className="h-6 w-6" />
+            </Link>
+          </div>
         </div>
       </header>
 
       <div className="max-w-7xl mx-auto p-4 flex gap-6">
         {/* Left sidebar */}
-        <div className="w-1/3 bg-white rounded-lg shadow-sm">
-          {/* Tabs */}
-          <div className="border-b border-gray-200">
-            <nav className="-mb-px flex" aria-label="Tabs">
-              <button
-                onClick={() => setActiveTab('all')}
-                className={`w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm
-                  ${activeTab === 'all'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-              >
-                All
-              </button>
-              <button
-                onClick={() => setActiveTab('favorites')}
-                className={`w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm
-                  ${activeTab === 'favorites'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-              >
-                Favorites
-              </button>
-            </nav>
-          </div>
+        <div className="w-1/3">
+          <div className="card">
+            {/* Tabs */}
+            <div className="border-b border-gray-200">
+              <nav className="-mb-px flex" aria-label="Tabs">
+                <button
+                  onClick={() => setActiveTab('all')}
+                  className={`w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm transition-colors duration-200
+                    ${activeTab === 'all'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setActiveTab('favorites')}
+                  className={`w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm transition-colors duration-200
+                    ${activeTab === 'favorites'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                >
+                  Favorites
+                </button>
+              </nav>
+            </div>
 
-          {/* Prompt List */}
-          <div className="flex flex-col h-full">
-            <div className="flex-1 divide-y divide-gray-200 overflow-y-auto">
+            {/* Prompt List */}
+            <div className="divide-y divide-gray-200 overflow-y-auto max-h-[calc(100vh-16rem)]">
               {prompts.map((prompt) => (
                 <div
                   key={prompt.id}
-                  className={`p-4 hover:bg-gray-50 cursor-pointer flex items-center justify-between ${
+                  className={`p-4 list-item-hover cursor-pointer flex items-center justify-between ${
                     selectedPrompt?.id === prompt.id ? 'bg-blue-50' : ''
                   }`}
                   onClick={() => {
@@ -251,7 +253,7 @@ export default function PromptsPage() {
                         e.stopPropagation();
                         handleLike(prompt.id);
                       }}
-                      className="text-gray-400 hover:text-blue-500"
+                      className="text-gray-400 hover:text-blue-500 transition-colors"
                     >
                       <span className="text-sm mr-1">{prompt.favorites_count}</span>
                       {userLikes.has(prompt.id) ? (
@@ -264,6 +266,7 @@ export default function PromptsPage() {
                 </div>
               ))}
             </div>
+
             <div className="p-4 border-t border-gray-200">
               <button
                 onClick={() => {
@@ -275,7 +278,7 @@ export default function PromptsPage() {
                   setSelectedPrompt(null);
                   setError(null);
                 }}
-                className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+                className="btn-primary w-full"
               >
                 Create New Prompt
               </button>
@@ -284,47 +287,50 @@ export default function PromptsPage() {
         </div>
 
         {/* Right content area */}
-        <div className="flex-1 bg-white rounded-lg shadow-sm p-6">
-          {error && (
-            <div className="mb-4 rounded-md bg-red-50 p-4">
-              <p className="text-sm text-red-700">{error}</p>
-            </div>
-          )}
-          {isCreating ? (
-            <CreatePromptForm
-              subgroupId={subgroupId || ''}
-              onCancel={() => {
-                setIsCreating(false);
-                setError(null);
-                if (prompts.length > 0) {
-                  setSelectedPrompt(prompts[0]);
-                }
-              }}
-              onSubmit={async () => {
-                try {
-                  const updatedPrompts = await fetchPrompts();
+        <div className="flex-1">
+          <div className="card p-6">
+            {error && (
+              <div className="mb-4 rounded-md bg-red-50 p-4 animate-fadeIn">
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            )}
+            
+            {isCreating ? (
+              <CreatePromptForm
+                subgroupId={subgroupId || ''}
+                onCancel={() => {
                   setIsCreating(false);
                   setError(null);
-                  if (updatedPrompts.length > 0) {
-                    setSelectedPrompt(updatedPrompts[0]);
+                  if (prompts.length > 0) {
+                    setSelectedPrompt(prompts[0]);
                   }
-                } catch (err: any) {
-                  setError(err.message || 'Failed to create prompt');
-                }
-              }}
-            />
-          ) : selectedPrompt ? (
-            <PromptDetails
-              prompt={selectedPrompt}
-              onUsePrompt={(id) => {
-                router.push(`/prompts/run?id=${id}`);
-              }}
-            />
-          ) : (
-            <div className="text-center py-12">
-              <p className="text-gray-500">Select a prompt or create a new one</p>
-            </div>
-          )}
+                }}
+                onSubmit={async () => {
+                  try {
+                    const updatedPrompts = await fetchPrompts();
+                    setIsCreating(false);
+                    setError(null);
+                    if (updatedPrompts.length > 0) {
+                      setSelectedPrompt(updatedPrompts[0]);
+                    }
+                  } catch (err: any) {
+                    setError(err.message || 'Failed to create prompt');
+                  }
+                }}
+              />
+            ) : selectedPrompt ? (
+              <PromptDetails
+                prompt={selectedPrompt}
+                onUsePrompt={(id) => {
+                  router.push(`/prompts/run?id=${id}`);
+                }}
+              />
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-gray-500">Select a prompt or create a new one</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </main>

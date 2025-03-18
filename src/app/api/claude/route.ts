@@ -17,7 +17,7 @@ export async function POST(request: Request) {
     }
 
     const message = await anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229',
+      model: 'claude-3-sonnet-20240307',
       max_tokens: 4096,
       messages: [
         {
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({
-      response: message.content[0].text,
+      response: message.content[0].type === 'text' ? message.content[0].text : '',
     });
   } catch (error: any) {
     console.error('Claude API error:', error);
