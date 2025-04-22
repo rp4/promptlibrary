@@ -14,6 +14,7 @@ interface Prompt {
   title: string;
   prompt_text: string;
   favorites_count: number;
+  subgroup_id?: string;
 }
 
 function RunPromptPageContent() {
@@ -39,7 +40,7 @@ function RunPromptPageContent() {
   const fetchPrompt = async () => {
     const { data, error } = await supabase
       .from('prompts')
-      .select('id, title, prompt_text, favorites_count')
+      .select('id, title, prompt_text, favorites_count, subgroup_id')
       .eq('id', promptId)
       .single();
 
@@ -226,7 +227,10 @@ function RunPromptPageContent() {
       <header className="header">
         <div className="max-w-7xl mx-auto flex items-center justify-between p-4">
           <div className="flex-1">
-            <Link href="/prompts" className="text-white/80 hover:text-white transition-colors">
+            <Link 
+              href={prompt?.subgroup_id ? `/prompts?subgroup=${prompt.subgroup_id}` : '/prompts'} 
+              className="text-white/80 hover:text-white transition-colors"
+            >
               <ArrowLeftIcon className="h-6 w-6" />
             </Link>
           </div>
