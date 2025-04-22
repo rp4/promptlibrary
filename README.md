@@ -14,3 +14,6 @@ History Screen:
 
 Create Prompt Screen:
 ![Screenshot 2025-04-22 122959](https://github.com/user-attachments/assets/aac37c9c-dbef-4a86-80e7-6abf752056be)
+
+Schema:
+![PromptLibrary_schema](https://github.com/user-attachments/assets/98703c70-cead-4f7a-a48d-85b9f252a8bf)
