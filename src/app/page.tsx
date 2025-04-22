@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { getCurrentUser } from '@/lib/auth';
 import AuthForm from '@/components/AuthForm';
+import { ClockIcon } from '@heroicons/react/24/outline';
 
 interface Group {
   id: string;
@@ -106,12 +107,9 @@ export default function Home() {
               <h1 className="text-2xl font-semibold">Gamified Prompt Library</h1>
             </Link>
             <div className="flex-1 flex justify-end">
-              <button
-                onClick={handleSignOut}
-                className="text-white/80 hover:text-white transition-colors"
-              >
-                Sign Out
-              </button>
+              <Link href="/prompts/history" className="text-white/80 hover:text-white transition-colors" title="History">
+                <ClockIcon className="h-6 w-6" />
+              </Link>
             </div>
           </div>
         </div>

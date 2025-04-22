@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
-import { ArrowLeftIcon, HomeIcon, StarIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, HomeIcon, StarIcon, ClockIcon } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import CreatePromptForm from '@/components/CreatePromptForm';
 import PromptDetails from '@/components/PromptDetails';
@@ -19,12 +19,18 @@ interface Prompt {
   created_by: string;
   prompt_text: string;
   notes: string;
+  subgroup_id?: string;
 }
 
 interface Like {
   id: string;
   prompt_id: string;
   user_id: string;
+}
+
+interface Subgroup {
+  id: string;
+  name: string;
 }
 
 function PromptsPageContent() {
@@ -41,6 +47,7 @@ function PromptsPageContent() {
   const [isCreating, setIsCreating] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'favorites'>('all');
   const [error, setError] = useState<string | null>(null);
+  const [subgroupName, setSubgroupName] = useState<string>('Prompts');
 
   useEffect(() => {
     checkUser();
@@ -59,8 +66,13 @@ function PromptsPageContent() {
           }
         });
       });
+      if (subgroupId) {
+        fetchSubgroupName();
+      } else {
+        setSubgroupName('Prompts');
+      }
     }
-  }, [user, promptId]);
+  }, [user, promptId, subgroupId]);
 
   useEffect(() => {
     if (user) {
@@ -93,6 +105,31 @@ function PromptsPageContent() {
     }
   };
 
+  const fetchSubgroupName = async () => {
+    if (!subgroupId) return;
+    try {
+      const { data, error } = await supabase
+        .from('subgroups')
+        .select('name')
+        .eq('id', subgroupId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching subgroup name:', error);
+        setError('Failed to load subgroup name.');
+        setSubgroupName('Prompts');
+      } else if (data) {
+        setSubgroupName(data.name);
+      } else {
+        setSubgroupName('Prompts');
+      }
+    } catch (error) {
+      console.error('Error fetching subgroup name:', error);
+      setError('An unexpected error occurred while loading subgroup name.');
+      setSubgroupName('Prompts');
+    }
+  };
+
   const fetchPrompts = async () => {
     let query = supabase
       .from('prompts')
@@ -105,12 +142,10 @@ function PromptsPageContent() {
     const { data } = await query.order('created_at', { ascending: false });
 
     if (data) {
-      // Filter prompts if we're on the favorites tab
       const filteredData = activeTab === 'favorites' 
         ? data.filter(prompt => userLikes.has(prompt.id))
         : data;
 
-      // Add favorites count from local state
       const promptsWithLikes = filteredData.map(prompt => ({
         ...prompt,
         favorites_count: prompt.favorites_count || 0,
@@ -118,7 +153,6 @@ function PromptsPageContent() {
 
       setPrompts(promptsWithLikes);
 
-      // Set initial selected prompt if needed
       if (promptsWithLikes.length > 0 && !selectedPrompt && !isCreating) {
         setSelectedPrompt(promptsWithLikes[0]);
       } else if (promptsWithLikes.length === 0 && !isCreating) {
@@ -136,7 +170,6 @@ function PromptsPageContent() {
       const newUserLikes = new Set(userLikes);
 
       if (isLiked) {
-        // Unlike: Delete from Supabase and remove from local set
         await supabase
           .from('likes')
           .delete()
@@ -145,10 +178,8 @@ function PromptsPageContent() {
 
         newUserLikes.delete(promptId);
 
-        // Decrement favorites count in Supabase
         await supabase.rpc('decrement_favorites_count', { prompt_id: promptId });
       } else {
-        // Like: Insert into Supabase and add to local set
         await supabase.from('likes').insert([
           {
             prompt_id: promptId,
@@ -158,14 +189,11 @@ function PromptsPageContent() {
 
         newUserLikes.add(promptId);
 
-        // Increment favorites count in Supabase
         await supabase.rpc('increment_favorites_count', { prompt_id: promptId });
       }
 
-      // Update local state
       setUserLikes(newUserLikes);
 
-      // Refresh prompts to update the counts
       await fetchPrompts();
     } catch (error) {
       console.error('Error toggling like:', error);
@@ -198,10 +226,10 @@ function PromptsPageContent() {
               <ArrowLeftIcon className="h-6 w-6" />
             </Link>
           </div>
-          <h1 className="text-2xl font-semibold flex-1 text-center">Prompts</h1>
+          <h1 className="text-2xl font-semibold flex-1 text-center">{subgroupName}</h1>
           <div className="flex-1 flex justify-end">
-            <Link href="/" className="text-white/80 hover:text-white transition-colors">
-              <HomeIcon className="h-6 w-6" />
+            <Link href="/prompts/history" className="text-white/80 hover:text-white transition-colors" title="History">
+              <ClockIcon className="h-6 w-6" />
             </Link>
           </div>
         </div>

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { extractVariables, replaceVariables } from '@/lib/promptUtils';
 import Link from 'next/link';
-import { ArrowLeftIcon, HomeIcon, StarIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, HomeIcon, StarIcon, ClockIcon } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { getCurrentUser } from '@/lib/auth';
 
@@ -128,10 +128,27 @@ function RunPromptPageContent() {
     setError(null);
     setShowWarning(false);
 
-    try {
-      const finalPrompt = replaceVariables(prompt.prompt_text, variables);
+    const startTime = new Date(); // Capture start time
+    let endTime: Date;
+    let durationMs: number;
+    let logData: any = {
+      prompt_name: prompt.title, // Use prompt title as name
+      input_data: { 
+        variables, 
+        prompt_id: prompt.id // Store prompt_id within input_data instead
+      }, // Store input variables
+    };
 
-      const response = await fetch('/api/claude', {
+    try {
+      const user = await getCurrentUser();
+      if (user) {
+        logData.user_id = user.id;
+      }
+
+      const finalPrompt = replaceVariables(prompt.prompt_text, variables);
+      logData.input_data.finalPrompt = finalPrompt; // Add final prompt text to input
+
+      const response = await fetch('/api/openai', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -141,37 +158,58 @@ function RunPromptPageContent() {
         }),
       });
 
+      endTime = new Date(); // Capture end time on success
+      durationMs = endTime.getTime() - startTime.getTime();
+
       if (!response.ok) {
-        throw new Error('Failed to get response from Claude');
+        const errorBody = await response.text();
+        throw new Error(`Failed to get response from OpenAI: ${response.status} ${errorBody}`);
       }
 
       const data = await response.json();
       setResult(data.response);
 
-      await supabase.from('prompt_usage').insert([
-        {
-          prompt_id: promptId,
-          user_id: (await getCurrentUser())?.id,
-          sent_data: JSON.stringify({ prompt: finalPrompt, variables }),
-          returned_data: data.response,
-          status: 'success'
-        }
-      ]);
+      // Prepare success log data
+      logData = {
+        ...logData,
+        start_time: startTime.toISOString(),
+        end_time: endTime.toISOString(),
+        duration_ms: durationMs,
+        output_data: { response: data.response }, // Store successful output
+        // status: 'success' // We don't have a status column in the new table
+      };
 
     } catch (err: any) {
+      endTime = new Date(); // Capture end time on error
+      durationMs = endTime.getTime() - startTime.getTime();
       setError(err.message || 'An error occurred');
-      
-      await supabase.from('prompt_usage').insert([
-        {
-          prompt_id: promptId,
-          user_id: (await getCurrentUser())?.id,
-          sent_data: JSON.stringify({ prompt: prompt.prompt_text, variables }),
-          returned_data: err.message,
-          status: 'failure'
-        }
-      ]);
+      console.error("Error running prompt:", err);
+
+      // Prepare error log data
+      logData = {
+        ...logData,
+        start_time: startTime.toISOString(),
+        end_time: endTime.toISOString(),
+        duration_ms: durationMs,
+        output_data: { error: err.message }, // Store error message
+        // status: 'failure' // We don't have a status column in the new table
+      };
+
     } finally {
       setLoading(false);
+      // Insert log regardless of success or failure
+      try {
+        const { error: logError } = await supabase
+          .from('prompt_usage_log') // Use the new table name
+          .insert([logData]);
+
+        if (logError) {
+          console.error('Failed to log prompt usage:', logError);
+          // Optionally notify the user or handle the logging error
+        }
+      } catch (logInsertError) {
+          console.error('Exception during prompt usage logging:', logInsertError);
+      }
     }
   };
 
@@ -194,8 +232,8 @@ function RunPromptPageContent() {
           </div>
           <h1 className="text-2xl font-semibold flex-1 text-center">Run Prompt</h1>
           <div className="flex-1 flex justify-end">
-            <Link href="/" className="text-white/80 hover:text-white transition-colors">
-              <HomeIcon className="h-6 w-6" />
+            <Link href="/prompts/history" className="text-white/80 hover:text-white transition-colors mr-4" title="History">
+              <ClockIcon className="h-6 w-6" />
             </Link>
           </div>
         </div>
